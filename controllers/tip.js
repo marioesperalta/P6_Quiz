@@ -22,9 +22,9 @@ exports.adminOrAuthorRequired=(req,res,next)=>{
     const isAuthor= req.session.user.id===req.tip.authorId;
 
     if(isAdmin || isAuthor){
-        next();// Si es autor o administrador llamo al siguiente middelware
+        next();
     }else{
-        res.send(403);//forbiden
+        res.send(403);
     }
 
 }
@@ -90,15 +90,15 @@ exports.destroy = (req, res, next) => {
 };
 
 exports.edit =(req,res,next)=>{
-    const {quiz,tip}=req;//Me cojo de la request el quiz y el tip.Estos los ha metido el autoload
+    const {quiz,tip}=req;
     res.render('tips/edit',{quiz,tip});
 };
 
 exports.update=(req,res,next)=>{
 
-    const {quiz,tip} = req;//Me cojo de la request el quiz y el tip.Estos los ha metido el autoload
-    tip.text=req.body.text;//El texto de la pista esta en el BODY porque es un POST
-    tip.accepted=false;//Si se edita el texto, el campo accepted tiene que estar en false
+    const {quiz,tip} = req;
+    tip.text=req.body.text;
+    tip.accepted=false;
 
     tip.save({fields: ["text","accepted"]})
         .then(tip => {
