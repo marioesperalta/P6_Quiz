@@ -17,6 +17,18 @@ exports.load = (req, res, next, tipId) => {
         .catch(error => next(error));
 };
 
+exports.adminOrAuthorRequired=(req,res,next)=>{
+    const isAdmin = !!req.session.user.isAdmin;
+    const isAuthor= req.session.user.id===req.tip.authorId;
+
+    if(isAdmin || isAuthor){
+        next();// Si es autor o administrador llamo al siguiente middelware
+    }else{
+        res.send(403);//forbiden
+    }
+
+}
+
 
 // POST /quizzes/:quizId/tips
 exports.create = (req, res, next) => {
@@ -77,11 +89,29 @@ exports.destroy = (req, res, next) => {
         .catch(error => next(error));
 };
 
-exports.new= (req,res,next)=>{
+exports.edit =(req,res,next)=>{
+    const {quiz,tip}=req;//Me cojo de la request el quiz y el tip.Estos los ha metido el autoload
+    res.render('tips/edit',{quiz,tip});
+};
 
-    const tip = {
-        text:""
-    };
-    const{quiz}=req;
-    res.render('tips/new', {tip,quiz});
+exports.update=(req,res,next)=>{
+
+    const {quiz,tip} = req;//Me cojo de la request el quiz y el tip.Estos los ha metido el autoload
+    tip.text=req.body.text;//El texto de la pista esta en el BODY porque es un POST
+    tip.accepted=false;//Si se edita el texto, el campo accepted tiene que estar en false
+
+    tip.save({fields: ["text","accepted"]})
+        .then(tip => {
+            req.flash('success', 'Tip edited successfully.');
+            res.redirect('/quizzes/' + req.params.quizId);
+        })
+        .catch(Sequelize.ValidationError, error => {
+            req.flash('error', 'There are errors in the form:');
+            error.errors.forEach(({message}) => req.flash('error', message));
+            res.render('tips/edit', {quiz,tip});
+        })
+        .catch(error => {
+            req.flash('error', 'Error editing the Quiz: ' + error.message);
+            next(error);
+        });
 }
